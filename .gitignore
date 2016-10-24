@@ -1,0 +1,5 @@
+*.mat
+*.bin
+*.exe
+*.mex*
+*.asv
