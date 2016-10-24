@@ -235,8 +235,6 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 		const int numChunksPerBlock = (int) ceil(double(numChunks)/double(min(optimalConcurrencyRemaining, numTimeBlocksMemLimit)));
 		const int numTimeBlocks = (int) ceil(double(numChunks) / double(numChunksPerBlock));
 
-		cout << numTimeBlocks << endl;
-
 		// All workgroup concurrency will be expressed in the third dimension dimension of ndrangekernel
 		const int totalConcurrency = numStimuliCombs*numTauOffsets*numROIsPerBatch*numTimeBlocks;
 		vector<int> ROIAssign(totalConcurrency);
