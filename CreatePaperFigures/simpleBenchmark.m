@@ -15,9 +15,11 @@ inputLength = 2^17;
 numSpatial = 4;
 numTemporal = 64;
 
-
+% Select correct length from response and mean subtract
 responseSelected = repmat(bsxfun(@minus,response(1:inputLength),mean(response(1:inputLength))),[1 1 numROIs]);
-spatialIdxs = mod(1:numSpatial,2)+1;
+% inputs array has only two spatial dimensions. spatialIdxs allows us to
+% repeat those dimensions the appropriate number of times
+spatialIdxs = mod((1:numSpatial)-1,2)+1;
 inputsSelected = repmat(bsxfun(@minus,inputs(1:inputLength,spatialIdxs),mean(inputs(1:inputLength,spatialIdxs))),[1 1 numROIs]);
 
 % CPU Timing
@@ -40,20 +42,19 @@ subplot(1,3,1);
 imagesc(covMatCPU(:,:,1));
 axis('equal');axis('tight');
 xlabel('CPU');
-axis off;
+set(gca,'XTick',[]);set(gca,'YTick',[]);
 colorbar;
 
 subplot(1,3,2);
 imagesc(covMatGPU(:,:,1));
 axis('equal');axis('tight');
 xlabel('GPU');
-set(gca,'xticklabel',[])
-axis off;
+set(gca,'XTick',[]);set(gca,'YTick',[]);
 colorbar;
 
 subplot(1,3,3);
 imagesc(covMatCPU(:,:,1) - covMatGPU(:,:,1));
 axis('equal');axis('tight');
 xlabel('CPU - GPU');
-axis off;
+set(gca,'XTick',[]);set(gca,'YTick',[]);
 colorbar;
