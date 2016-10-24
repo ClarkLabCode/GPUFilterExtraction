@@ -20,6 +20,7 @@ To use the MATLAB wrapper, you will need the appropriate .mex file for your syst
 ## Usage
 
 To recreate figures from our upcoming paper, follow these steps:
+
 1. In MATLAB, navigate to the CreatePaperFigures folder
 2. Run ```generateFigure1B.m```
   * The first time you run this script, test data will be generated, which will take a few seconds
