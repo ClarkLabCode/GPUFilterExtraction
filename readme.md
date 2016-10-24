@@ -20,10 +20,10 @@ To use the MATLAB wrapper, you will need the appropriate .mex file for your syst
 ## Usage
 
 To recreate figures from our upcoming paper, follow these steps:
-1) In MATLAB, navigate to the CreatePaperFigures folder
-2) Run ```generateFigure1B.m```
+1. In MATLAB, navigate to the CreatePaperFigures folder
+2. Run ```generateFigure1B.m```
   * The first time you run this script, test data will be generated, which will take a few seconds
-3) Run ```generateFigure1CDEF.m``` **Note that this can take several hours to run, depending on your CPU**
+3. Run ```generateFigure1CDEF.m``` **Note that this can take several hours to run, depending on your CPU**
   * As an alternative, run ```simpleBenchmark.m``` to get a sense of the speedup on your machine.
   
 For more information regarding the MATLAB wrapper function ```extract2ndOrderKernelGPU```, type ```help extract2ndOrderKernelGPU``` in MATLAB.
