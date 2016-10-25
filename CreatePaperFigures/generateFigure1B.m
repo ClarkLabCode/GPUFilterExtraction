@@ -9,7 +9,8 @@ else
 end
 
 image = single(imresize(imread('fly.png'),0.5))*(2/255) - 1;
-image = .299*image(:,:,1)+.587*image(:,:,1)+.114*image(:,:,3);
+% Convert the image from color to greyscale using the NTSC standard weights
+image = .299*image(:,:,1)+.587*image(:,:,2)+.114*image(:,:,3);
 
 covMatGPU = extract2ndOrderKernelGPU(64,inputs(:,1),response-mean(response));
 
