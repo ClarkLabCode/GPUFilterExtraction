@@ -4,6 +4,7 @@ dataFilename = [fileparts(mfilename('fullpath')) filesep() 'data.mat'];
 if exist(dataFilename,'file')
     load(dataFilename);
 else
+	disp('Generating test data');
     genData;
     clear all;
     load([fileparts(mfilename('fullpath')) filesep() 'data.mat']);
@@ -22,11 +23,13 @@ responseSelected = repmat(bsxfun(@minus,response(1:inputLength),mean(response(1:
 spatialIdxs = mod((1:numSpatial)-1,2)+1;
 inputsSelected = repmat(bsxfun(@minus,inputs(1:inputLength,spatialIdxs),mean(inputs(1:inputLength,spatialIdxs))),[1 1 numROIs]);
 
+disp('Running on CPU: this could take a couple minutes.');
 % CPU Timing
 tic
 covMatCPU = extract2ndOrderKernelCPU(numTemporal,inputsSelected,responseSelected);
 cpuTime = toc;
 
+disp('Running on GPU');
 % OCL Timing
 tic;
 covMatGPU = extract2ndOrderKernelGPU(numTemporal,inputsSelected,responseSelected);

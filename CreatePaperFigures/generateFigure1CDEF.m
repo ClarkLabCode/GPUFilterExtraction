@@ -2,6 +2,7 @@
 % over an hour to complete. For a quick comparison, please use
 % simpleBenchmark.m
 clear all;
+disp('Warning: This script takes over an hour to complete on a high-end machine due to slow CPU extraction.');
 dataFilename = [fileparts(mfilename('fullpath')) filesep() 'data.mat'];
 if exist(dataFilename,'file')
     load(dataFilename);
@@ -33,7 +34,8 @@ for varToChange = 1:4
                 numTemporal = numTemporalVec(changeIdx);
         end
         responseSelected = repmat(single(bsxfun(@minus,response(1:inputLength),mean(response(1:inputLength)))),[1 1 numROIs]);
-        responseSelected(1:max(numTemporalVec),:) = 0;
+		% inputs array has only two spatial dimensions. spatialIdxs allows us to
+		% repeat those dimensions the appropriate number of times
         spatialIdxs = mod(1:numSpatial,2)+1;
         inputsSelected = repmat(single(bsxfun(@minus,inputs(1:inputLength,spatialIdxs),mean(inputs(1:inputLength,spatialIdxs)))),[1 1 numROIs]);
                 
