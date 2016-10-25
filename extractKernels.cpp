@@ -342,8 +342,8 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 			computeQueue.enqueueNDRangeKernel(ExtractKernel, cl::NullRange, extractGlobal, extractLocal, NULL, NULL);
 
 			MeanKernel.setArg(0, smallMatrixBufs[i % 2]);
-			cl::NDRange sumGlobal(outputElementsPerROI*numROIsThisBatch);
-			computeQueue.enqueueNDRangeKernel(MeanKernel, cl::NullRange, sumGlobal, cl::NullRange, NULL, &computeFinished[i]);
+			cl::NDRange meanGlobalRange(outputElementsPerROI*numROIsThisBatch);
+			computeQueue.enqueueNDRangeKernel(MeanKernel, cl::NullRange, meanGlobalRange, cl::NullRange, NULL, &computeFinished[i]);
 			computeQueue.flush();
 
 			readWaitLists[i] = { computeFinished[i] };
