@@ -54,7 +54,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 
 		bool hasGPU = false;
 		int bestPlatform = 0;
-		int bestDevice = 0;
+		int bestDeviceNum = 0;
 		int bestPerformance = 0;
 		for (int platIdx = 0; platIdx < platformList.size(); platIdx++) {
 
@@ -93,7 +93,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 				if (relativePerformance > bestPerformance) {
 					bestPerformance = relativePerformance;
 					bestPlatform = platIdx;
-					bestDevice = devIdx;
+					bestDeviceNum = devIdx;
 				}
 			}
 		}
@@ -110,12 +110,14 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 
         vector< cl::Device > devices;
         devices = context.getInfo<CL_CONTEXT_DEVICES>();
-        cout << "Running on: " << devices[bestDevice].getInfo<CL_DEVICE_NAME>() << endl;
+        vector< cl::Device > bestDeviceVec = { devices[bestDeviceNum] };
+        cl::Device bestDevice = bestDeviceVec[0];
+        cout << "Running on: " << bestDevice.getInfo<CL_DEVICE_NAME>() << endl;
 
         //--------Compile or load kernel extraction program from opencl---------//
 		
 		// Dynamically determine how much local memory to use based on what's available
-		const int localMemorySize = (int) devices[bestDevice].getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() - 4;
+		const int localMemorySize = (int) bestDevice.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() - 4;
 		const int numTimepoints = localMemorySize / (3 * sizeof(float));
 		string defineString = "#define NUM_TIMEPOINTS " + to_string(numTimepoints) + "\n";
 
@@ -143,7 +145,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 				cl::Program extractProgram(context, ExtractSource);
 				try {
 					const char options[] = "-cl-fast-relaxed-math";
-					extractProgram.build(devices, options);
+					extractProgram.build(bestDeviceVec, options);
 				}
 				catch (cl::Error err) {
 					errorString.append("Error in ");
@@ -151,7 +153,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 					errorString.append(": ");
 					errorString.append(getErrorString(err.err()));
 					char buildlog[10000];
-					extractProgram.getBuildInfo(devices[0], CL_PROGRAM_BUILD_LOG, &buildlog);
+					extractProgram.getBuildInfo(bestDevice, CL_PROGRAM_BUILD_LOG, &buildlog);
 					errorString.append(buildlog);
 					throw err;
 				}
@@ -170,18 +172,18 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 			binaryVecs[kernelNum] = binaryVec;
 		}
 		cl::Program::Binaries extractBinary(1, make_pair(binaryVecs[0].data(), binaryVecs[0].size()));
-		cl::Program extractProgram(context, devices, extractBinary);
+		cl::Program extractProgram(context, bestDeviceVec, extractBinary);
 		extractProgram.build();
 		int error;
         cl::Kernel ExtractKernel(extractProgram, "extract", &error);
 
 		cl::Program::Binaries meanBinary(1, make_pair(binaryVecs[1].data(), binaryVecs[1].size()));
-		cl::Program meanProgram(context, devices, meanBinary);
+		cl::Program meanProgram(context, bestDeviceVec, meanBinary);
 		meanProgram.build();
 		cl::Kernel MeanKernel(meanProgram, "mean", &error);
 
 		const int64_t reservedSpace = (int64_t) 1.5e7; // Save 15 megabytes for "assign" buffers
-		const int64_t totalGPUMem = devices[bestDevice].getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() - reservedSpace;
+		const int64_t totalGPUMem = bestDevice.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>() - reservedSpace;
 		const int64_t outputMatrixMem = int64_t(numTau*numStimuli)*int64_t(numTau*numStimuli)* sizeof(float);
 		const int64_t inputMem = respLength*(numStimuli+1)* sizeof(float); //stimuli + response
 
@@ -208,7 +210,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 		}
 		const int numStimuliCombs = (int) stimuliCombs.size();
 
-		const int maxThreads = (int) ExtractKernel.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(devices[0]);
+		const int maxThreads = (int) ExtractKernel.getWorkGroupInfo<CL_KERNEL_WORK_GROUP_SIZE>(bestDevice);
 		vector<int> tau1Offsets, tau2Offsets;
 		int numTau1Local, numTau2Local;
 		tie(tau1Offsets, tau2Offsets, numTau1Local, numTau2Local) = divideNumTauBlocks(numTau, maxThreads, numTimepoints);
@@ -216,7 +218,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 
 		//We want to schedule enough concurrency without using too much memory.
 		//We can schedule concurrency by increasing the number of ROIs and increasing numTimeblocks
-		const int deviceComputeUnits = devices[bestDevice].getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
+		const int deviceComputeUnits = bestDevice.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>();
 		const int workgroupsOptimalOccupancy = 8 * deviceComputeUnits;
 		int optimalConcurrencyRemaining = (int) ceil(double(workgroupsOptimalOccupancy) / double(numStimuliCombs*numTauOffsets));
 
@@ -297,7 +299,7 @@ tuple<int, string> extractKernels(const float respArray[], const float stimArray
 
 		//-------Schedule computation on GPU----------//
 
-		cl::CommandQueue writeQueue(context, devices[0]), computeQueue(context, devices[0]), readQueue(context, devices[0]);
+		cl::CommandQueue writeQueue(context, bestDevice), computeQueue(context, bestDevice), readQueue(context, bestDevice);
 
         vector<cl::Event> computeFinished(numROIBatches);
         vector<cl::Event> writeFinished(numROIBatches);
