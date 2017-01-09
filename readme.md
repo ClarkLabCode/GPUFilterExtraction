@@ -2,6 +2,10 @@
 
 This program makes use of your GPU to extract the Wiener Filter or STC matrix ([1](https://www.ncbi.nlm.nih.gov/pubmed/27477016),[2](http://www.cns.nyu.edu/pub/lcv/simoncelli03c-preprint.pdf)) from a set of inputs and responses. This can speed up computations >100x compared to commonly used CPU-based implementations. This repository contains a MATLAB wrapper and an example C++ application.
 
+Our paper documenting this algorithm is:
+
+[**Graphics Processing Unit-Accelerated Code for Computing Second-Order Wiener Kernels and Spike-Triggered Covariance**](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0169842) by Omer Mano and Damon A. Clark
+
 ## Compatibility
 This program should be compatible with most modern systems and has been sucessfully tested on the following systems:
 * OS X El Capitan with Intel Iris 6100 graphics
